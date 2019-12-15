@@ -1,5 +1,5 @@
-# engine
-MIT Pokerbots engine and skeleton bots
+# MIT Pokerbots Engine
+MIT Pokerbots engine and skeleton bots in Python, Java, and C++
 
 ## Dependencies
  - python>=3.5

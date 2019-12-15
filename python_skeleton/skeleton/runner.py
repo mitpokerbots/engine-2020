@@ -38,17 +38,13 @@ class Runner():
         game_state = GameState(0, '0.', 1)
         round_state = None
         active = 0
-        game_flag = True
         round_flag = True
         for packet in self.receive():
             for clause in packet:
                 if clause[0] == 'T':
                     game_state = GameState(game_state.bankroll, float(clause[1:]), game_state.round_num)
-                    if game_flag:
-                        self.pokerbot.handle_new_game(game_state)
-                        game_flag = False
                 elif clause[0] == 'P':
-                    active = int(clause[1])
+                    active = int(clause[1:])
                 elif clause[0] == 'H':
                     hands = [[], []]
                     hands[active] = clause[1:].split(',')
@@ -56,8 +52,7 @@ class Runner():
                     stacks = [STARTING_STACK-SMALL_BLIND, STARTING_STACK-BIG_BLIND]
                     round_state = RoundState(0, 0, pips, stacks, hands, [], None)
                     if round_flag:
-                        round_state_copy = RoundState(0, 0, list(pips), list(stacks), list(hands), [], None)
-                        self.pokerbot.handle_new_round(game_state, round_state_copy, active)
+                        self.pokerbot.handle_new_round(game_state, round_state, active)
                         round_flag = False
                 elif clause[0] == 'F':
                     round_state = round_state.proceed(FoldAction())
@@ -68,10 +63,17 @@ class Runner():
                 elif clause[0] == 'R':
                     round_state = round_state.proceed(RaiseAction(int(clause[1:])))
                 elif clause[0] == 'B':
-                    del round_state.deck[:]
-                    round_state.deck.extend(clause[1:].split(','))
+                    round_state = RoundState(round_state.button, round_state.street, round_state.pips, round_state.stacks,
+                                             round_state.hands, clause[1:].split(','), round_state.previous_state)
                 elif clause[0] == 'O':
-                    round_state.previous_state.hands[1-active].extend(clause[1:].split(','))
+                    # backtrack
+                    round_state = round_state.previous_state
+                    revised_hands = list(round_state.hands)
+                    revised_hands[1-active] = clause[1:].split(',')
+                    # rebuild history
+                    round_state = RoundState(round_state.button, round_state.street, round_state.pips, round_state.stacks,
+                                             revised_hands, round_state.deck, round_state.previous_state)
+                    round_state = TerminalState([0, 0], round_state)
                 elif clause[0] == 'D':
                     assert(isinstance(round_state, TerminalState))
                     delta = int(clause[1:])

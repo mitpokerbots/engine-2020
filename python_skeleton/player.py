@@ -12,19 +12,16 @@ Simple example pokerbot, written in Python.
 
 class Player(Bot):
 
-    def handle_new_game(self, game_state):
+    def __init__(self):
         '''
         Called when a new game starts. Called exactly once.
 
         Arguments:
-        game_state: the GameState object.
+        Nothing.
 
         Returns:
         Nothing.
         '''
-        #my_bankroll = game_state.bankroll  # the total number of chips you've gained or lost from the beginning of the game to the start of this round
-        #game_clock = game_state.game_clock  # the total number of seconds your bot has left to play this game
-        #round_num = game_state.round_num  # the round number from 1 to 1000
         pass
 
     def handle_new_round(self, game_state, round_state, active):
@@ -39,6 +36,9 @@ class Player(Bot):
         Returns:
         Nothing.
         '''
+        #my_bankroll = game_state.bankroll  # the total number of chips you've gained or lost from the beginning of the game to the start of this round
+        #game_clock = game_state.game_clock  # the total number of seconds your bot has left to play this game
+        #round_num = game_state.round_num  # the round number from 1 to 1000
         #my_cards = round_state.hands[active]  # your cards
         #big_blind = bool(active)  # True if you are the big blind
         pass

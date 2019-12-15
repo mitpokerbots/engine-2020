@@ -5,9 +5,6 @@ This file contains the base class that you should implement for your pokerbot.
 
 class Bot():
 
-    def handle_new_game(self, game_state):
-        raise NotImplemented('handle_new_game')
-
     def handle_new_round(self, game_state, round_state, active):
         raise NotImplemented('handle_new_round')
 

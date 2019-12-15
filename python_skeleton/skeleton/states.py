@@ -14,17 +14,7 @@ BIG_BLIND = 2
 SMALL_BLIND = 1
 
 
-class RoundState():
-
-    def __init__(self, button, street, pips, stacks, hands, deck, previous_state):
-        self.button = button
-        self.street = street
-        self.pips = pips
-        self.stacks = stacks
-        self.hands = hands
-        # first five deck cards are the board
-        self.deck = deck
-        self.previous_state = previous_state
+class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks', 'hands', 'deck', 'previous_state'])):
 
     def showdown(self):
         return TerminalState([0, 0], self)

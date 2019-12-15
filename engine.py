@@ -23,17 +23,7 @@ PVALUE = lambda name, value : ', {} ({})'.format(name, value)
 STATUS = lambda players : ''.join([PVALUE(p.name, p.bankroll) for p in players])
 
 
-class RoundState():
-
-    def __init__(self, button, street, pips, stacks, hands, deck, previous_state):
-        self.button = button
-        self.street = street
-        self.pips = pips
-        self.stacks = stacks
-        self.hands = hands
-        # first five deck cards are the board
-        self.deck = deck
-        self.previous_state = previous_state
+class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks', 'hands', 'deck', 'previous_state'])):
 
     def showdown(self):
         score0 = eval7.evaluate(self.deck.peek(5) + self.hands[0])

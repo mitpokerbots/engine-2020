@@ -174,12 +174,14 @@ class Player():
                 print(self.name, 'run failed - check "run" in commands.json')
             try:
                 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                server_socket.bind(('', self.port))
-                server_socket.settimeout(CONNECT_TIMEOUT)
-                server_socket.listen()
-                client_socket, _ = server_socket.accept()
-                client_socket.settimeout(CONNECT_TIMEOUT)
-                socketfile = client_socket.makefile('rw')
+                with server_socket:
+                    server_socket.bind(('', self.port))
+                    server_socket.settimeout(CONNECT_TIMEOUT)
+                    server_socket.listen()
+                    client_socket, _ = server_socket.accept()
+                    with client_socket:
+                        client_socket.settimeout(CONNECT_TIMEOUT)
+                        socketfile = client_socket.makefile('rw')
                 self.socketfile = socketfile
                 print(self.name, 'connected successfully')
             except socket.timeout:

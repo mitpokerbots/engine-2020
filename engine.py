@@ -1,12 +1,14 @@
-# 6.176 MIT POKERBOTS GAME ENGINE
-# DO NOT REMOVE, RENAME, OR EDIT THIS FILE
-from config import *
+'''
+6.176 MIT POKERBOTS GAME ENGINE
+DO NOT REMOVE, RENAME, OR EDIT THIS FILE
+'''
 from collections import namedtuple
 import time
 import json
 import subprocess
 import socket
 import eval7
+from config import *
 
 FoldAction = namedtuple('FoldAction', [])
 CallAction = namedtuple('CallAction', [])
@@ -17,15 +19,21 @@ TerminalState = namedtuple('TerminalState', ['deltas', 'previous_state'])
 
 STREET_NAMES = ['Flop', 'Turn', 'River']
 DECODE = {'F': FoldAction, 'C': CallAction, 'K': CheckAction, 'R': RaiseAction}
-CCARDS = lambda code, cards : code + ','.join(map(str, cards))
-PCARDS = lambda cards : '[{}]'.format(' '.join(map(str, cards)))
-PVALUE = lambda name, value : ', {} ({})'.format(name, value)
-STATUS = lambda players : ''.join([PVALUE(p.name, p.bankroll) for p in players])
+CCARDS = lambda code, cards: code + ','.join(map(str, cards))
+PCARDS = lambda cards: '[{}]'.format(' '.join(map(str, cards)))
+PVALUE = lambda name, value: ', {} ({})'.format(name, value)
+STATUS = lambda players: ''.join([PVALUE(p.name, p.bankroll) for p in players])
 
 
 class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks', 'hands', 'deck', 'previous_state'])):
+    '''
+    Encodes the game tree for one round of poker.
+    '''
 
     def showdown(self):
+        '''
+        Compares the players' hands and computes payoffs.
+        '''
         score0 = eval7.evaluate(self.deck.peek(5) + self.hands[0])
         score1 = eval7.evaluate(self.deck.peek(5) + self.hands[1])
         if score0 > score1:
@@ -37,18 +45,24 @@ class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks'
         return TerminalState([delta, -delta], self)
 
     def legal_actions(self):
+        '''
+        Returns a set which corresponds to the active player's legal moves.
+        '''
         active = self.button % 2
         continue_cost = self.pips[1-active] - self.pips[active]
         if continue_cost == 0:
             # we can only raise the stakes if both players can afford it
             bets_forbidden = (self.stacks[0] == 0 or self.stacks[1] == 0)
             return {CheckAction} if bets_forbidden else {CheckAction, RaiseAction}
-        else:  # continue_cost > 0
-            # similarly, re-raising is only allowed if both players can afford it
-            raises_forbidden = (continue_cost == self.stacks[active] or self.stacks[1-active] == 0)
-            return {FoldAction, CallAction} if raises_forbidden else {FoldAction, CallAction, RaiseAction}
+        # continue_cost > 0
+        # similarly, re-raising is only allowed if both players can afford it
+        raises_forbidden = (continue_cost == self.stacks[active] or self.stacks[1-active] == 0)
+        return {FoldAction, CallAction} if raises_forbidden else {FoldAction, CallAction, RaiseAction}
 
     def raise_bounds(self):
+        '''
+        Returns a tuple of the minimum and maximum legal raises.
+        '''
         active = self.button % 2
         continue_cost = self.pips[1-active] - self.pips[active]
         max_contribution = min(self.stacks[active], self.stacks[1-active] + continue_cost)
@@ -56,43 +70,51 @@ class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks'
         return (self.pips[active] + min_contribution, self.pips[active] + max_contribution)
 
     def proceed_street(self):
+        '''
+        Resets the players' pips and advances the game tree to the next round of betting.
+        '''
         if self.street == 5:
             return self.showdown()
-        else:
-            new_street = 3 if self.street == 0 else self.street + 1
-            return RoundState(1, new_street, [0, 0], self.stacks, self.hands, self.deck, self)
+        new_street = 3 if self.street == 0 else self.street + 1
+        return RoundState(1, new_street, [0, 0], self.stacks, self.hands, self.deck, self)
 
     def proceed(self, action):
+        '''
+        Advances the game tree by one action performed by the active player.
+        '''
         active = self.button % 2
         if isinstance(action, FoldAction):
             delta = self.stacks[0] - STARTING_STACK if active == 0 else STARTING_STACK - self.stacks[1]
             return TerminalState([delta, -delta], self)
-        elif isinstance(action, CallAction):
+        if isinstance(action, CallAction):
             if self.button == 0:  # sb calls bb
-                return RoundState(1, 0, [BIG_BLIND] * 2, [STARTING_STACK-BIG_BLIND] * 2, self.hands, self.deck, self)
-            else:  # both players acted
-                new_pips = list(self.pips)
-                new_stacks = list(self.stacks)
-                contribution = new_pips[1-active] - new_pips[active]
-                new_stacks[active] -= contribution
-                new_pips[active] += contribution
-                state = RoundState(self.button + 1, self.street, new_pips, new_stacks, self.hands, self.deck, self)
-                return state.proceed_street()
-        elif isinstance(action, CheckAction):
-            if (self.street == 0 and self.button > 0) or self.button > 1:  # both players acted
-                return self.proceed_street()
-            else:  # let opponent act
-                return RoundState(self.button + 1, self.street, self.pips, self.stacks, self.hands, self.deck, self)
-        else:  # isinstance(action, RaiseAction)
+                return RoundState(1, 0, [BIG_BLIND] * 2, [STARTING_STACK - BIG_BLIND] * 2, self.hands, self.deck, self)
+            # both players acted
             new_pips = list(self.pips)
             new_stacks = list(self.stacks)
-            contribution = action.amount - new_pips[active]
+            contribution = new_pips[1-active] - new_pips[active]
             new_stacks[active] -= contribution
             new_pips[active] += contribution
-            return RoundState(self.button + 1, self.street, new_pips, new_stacks, self.hands, self.deck, self)
+            state = RoundState(self.button + 1, self.street, new_pips, new_stacks, self.hands, self.deck, self)
+            return state.proceed_street()
+        if isinstance(action, CheckAction):
+            if (self.street == 0 and self.button > 0) or self.button > 1:  # both players acted
+                return self.proceed_street()
+            # let opponent act
+            return RoundState(self.button + 1, self.street, self.pips, self.stacks, self.hands, self.deck, self)
+        # isinstance(action, RaiseAction)
+        new_pips = list(self.pips)
+        new_stacks = list(self.stacks)
+        contribution = action.amount - new_pips[active]
+        new_stacks[active] -= contribution
+        new_pips[active] += contribution
+        return RoundState(self.button + 1, self.street, new_pips, new_stacks, self.hands, self.deck, self)
 
 
 class Player():
+    '''
+    Handles subprocess and socket interactions with one player's pokerbot.
+    '''
 
     def __init__(self, name, path, port):
         self.name = name
@@ -106,7 +128,9 @@ class Player():
         self.bytes_log = []
 
     def build(self):
-        # load commands file
+        '''
+        Loads the commands file and builds the pokerbot.
+        '''
         try:
             with open(self.path + '/commands.json', 'r') as json_file:
                 commands = json.load(json_file)
@@ -120,38 +144,40 @@ class Player():
             print(self.name, 'commands.json not found - check PLAYER_PATH')
         except json.decoder.JSONDecodeError:
             print(self.name, 'commands.json misformatted')
-        # build pokerbot
         if self.commands is not None and len(self.commands['build']) > 0:
             try:
-                proc = subprocess.run(self.commands['build'], stdout=subprocess.PIPE,
-                                      stderr=subprocess.STDOUT, cwd=self.path, timeout=BUILD_TIMEOUT)
+                proc = subprocess.run(self.commands['build'],
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                      cwd=self.path, timeout=BUILD_TIMEOUT, check=False)
                 self.bytes_log.append(proc.stdout)
-            except subprocess.TimeoutExpired as te:
+            except subprocess.TimeoutExpired as timeout_expired:
                 print('Timed out waiting for', self.name, 'to build')
-                self.bytes_log.append(te.stdout)
+                self.bytes_log.append(timeout_expired.stdout)
             except (TypeError, ValueError):
                 print(self.name, 'build command misformatted')
             except OSError:
                 print(self.name, 'build failed - check "build" in commands.json')
 
     def run(self):
-        # run pokerbot
+        '''
+        Runs the pokerbot and establishes the socket connection.
+        '''
         if self.commands is not None and len(self.commands['run']) > 0:
             try:
-                proc = subprocess.Popen(self.commands['run'] + [str(self.port)], stdout=subprocess.PIPE,
-                                        stderr=subprocess.STDOUT, cwd=self.path)
+                proc = subprocess.Popen(self.commands['run'] + [str(self.port)],
+                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                        cwd=self.path)
                 self.bot_subprocess = proc
             except (TypeError, ValueError):
                 print(self.name, 'run command misformatted')
             except OSError:
                 print(self.name, 'run failed - check "run" in commands.json')
-            # establish client-server connection
             try:
                 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 server_socket.bind(('', self.port))
                 server_socket.settimeout(CONNECT_TIMEOUT)
                 server_socket.listen()
-                client_socket, address = server_socket.accept()
+                client_socket, _ = server_socket.accept()
                 client_socket.settimeout(CONNECT_TIMEOUT)
                 socketfile = client_socket.makefile('rw')
                 self.socketfile = socketfile
@@ -162,6 +188,9 @@ class Player():
                 print(self.name, 'connect failed - check PLAYER_PORT')
 
     def stop(self):
+        '''
+        Closes the socket connection and stops the pokerbot.
+        '''
         if self.socketfile is not None:
             try:
                 self.socketfile.write('Q\n')
@@ -172,18 +201,22 @@ class Player():
                 print('Could not close socket connection with', self.name)
         if self.bot_subprocess is not None:
             try:
-                outs, errs = self.bot_subprocess.communicate(timeout=QUIT_TIMEOUT)
+                outs, _ = self.bot_subprocess.communicate(timeout=QUIT_TIMEOUT)
                 self.bytes_log.append(outs)
             except subprocess.TimeoutExpired:
                 print('Timed out waiting for', self.name, 'to quit')
                 self.bot_subprocess.kill()
-                outs, errs = self.bot_subprocess.communicate()
+                outs, _ = self.bot_subprocess.communicate()
                 self.bytes_log.append(outs)
         with open(self.name + '.txt', 'wb') as log_file:
             for output in self.bytes_log:
                 log_file.write(output)
 
     def query(self, round_state, round_rep, game_log):
+        '''
+        Requests one action from the pokerbot over the socket connection.
+        At the end of the round, we request a CheckAction from the pokerbot.
+        '''
         legal_actions = round_state.legal_actions() if isinstance(round_state, RoundState) else {CheckAction}
         if self.socketfile is not None and self.game_clock > 0.:
             try:
@@ -194,7 +227,8 @@ class Player():
                 self.socketfile.flush()
                 clause = self.socketfile.readline().strip()
                 end_time = time.perf_counter()
-                self.game_clock -= end_time - start_time
+                if ENFORCE_GAME_CLOCK:
+                    self.game_clock -= end_time - start_time
                 if self.game_clock <= 0.:
                     raise socket.timeout
                 action = DECODE[clause[0]]
@@ -223,12 +257,18 @@ class Player():
 
 
 class Game():
+    '''
+    Manages logging and the high-level game procedure.
+    '''
 
     def __init__(self):
         self.log = ['6.176 MIT Pokerbots - ' + PLAYER_1_NAME + ' vs ' + PLAYER_2_NAME]
         self.round_reps = [[], []]
 
     def log_round_state(self, players, round_state):
+        '''
+        Incorporates RoundState information into the game log and player reps.
+        '''
         if round_state.street == 0 and round_state.button == 0:
             self.log.append('{} posts the blind of {}'.format(players[0].name, SMALL_BLIND))
             self.log.append('{} posts the blind of {}'.format(players[1].name, BIG_BLIND))
@@ -238,7 +278,7 @@ class Game():
             self.round_reps[1] = ['T0.', 'P1', CCARDS('H', round_state.hands[1])]
         elif round_state.street > 0 and round_state.button == 1:
             board = round_state.deck.peek(round_state.street)
-            self.log.append(STREET_NAMES[round_state.street-3] + ' ' + PCARDS(board) +
+            self.log.append(STREET_NAMES[round_state.street - 3] + ' ' + PCARDS(board) +
                             PVALUE(players[0].name, STARTING_STACK-round_state.stacks[0]) +
                             PVALUE(players[1].name, STARTING_STACK-round_state.stacks[1]))
             compressed_board = CCARDS('B', board)
@@ -246,6 +286,9 @@ class Game():
             self.round_reps[1].append(compressed_board)
 
     def log_action(self, name, action, bet_override):
+        '''
+        Incorporates action information into the game log and player reps.
+        '''
         if isinstance(action, FoldAction):
             phrasing = ' folds'
             code = 'F'
@@ -263,6 +306,9 @@ class Game():
         self.round_reps[1].append(code)
 
     def log_terminal_state(self, players, round_state):
+        '''
+        Incorporates TerminalState information into the game log and player reps.
+        '''
         previous_state = round_state.previous_state
         if FoldAction not in previous_state.legal_actions():
             self.log.append('{} shows {}'.format(players[0].name, PCARDS(previous_state.hands[0])))
@@ -275,11 +321,14 @@ class Game():
         self.round_reps[1].append('D' + str(round_state.deltas[1]))
 
     def run_round(self, players):
+        '''
+        Runs one round of poker.
+        '''
         deck = eval7.Deck()
         deck.shuffle()
         hands = [deck.deal(2), deck.deal(2)]
         pips = [SMALL_BLIND, BIG_BLIND]
-        stacks = [STARTING_STACK-SMALL_BLIND, STARTING_STACK-BIG_BLIND]
+        stacks = [STARTING_STACK - SMALL_BLIND, STARTING_STACK - BIG_BLIND]
         round_state = RoundState(0, 0, pips, stacks, hands, deck, None)
         while not isinstance(round_state, TerminalState):
             self.log_round_state(players, round_state)
@@ -295,6 +344,9 @@ class Game():
             player.bankroll += delta
 
     def run(self):
+        '''
+        Runs one game of poker.
+        '''
         print('   __  _____________  ___       __           __        __    ')
         print('  /  |/  /  _/_  __/ / _ \\___  / /_____ ____/ /  ___  / /____')
         print(' / /|_/ // /  / /   / ___/ _ \\/  \'_/ -_) __/ _ \\/ _ \\/ __(_-<')
@@ -308,9 +360,9 @@ class Game():
         for player in players:
             player.build()
             player.run()
-        for r in range(1, ROUNDS+1):
+        for round_num in range(1, NUM_ROUNDS + 1):
             self.log.append('')
-            self.log.append('Round #' + str(r) + STATUS(players))
+            self.log.append('Round #' + str(round_num) + STATUS(players))
             self.run_round(players)
             players = players[::-1]
         self.log.append('')
@@ -324,5 +376,5 @@ class Game():
 
 
 if __name__ == '__main__':
-    game = Game()
-    game.run()
+    Game().run()
+    

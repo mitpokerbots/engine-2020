@@ -1,16 +1,18 @@
-from skeleton.actions import FoldAction, CallAction, CheckAction, RaiseAction
-from skeleton.states import GameState, TerminalState, RoundState
-from skeleton.bot import Bot
-from skeleton.runner import parse_args, run_bot
-
-import random
-
 '''
 Simple example pokerbot, written in Python.
 '''
+import random
+from skeleton.actions import FoldAction, CallAction, CheckAction, RaiseAction
+from skeleton.states import GameState, TerminalState, RoundState
+from skeleton.states import NUM_ROUNDS, STARTING_STACK, BIG_BLIND, SMALL_BLIND
+from skeleton.bot import Bot
+from skeleton.runner import parse_args, run_bot
 
 
 class Player(Bot):
+    '''
+    A pokerbot.
+    '''
 
     def __init__(self):
         '''
@@ -26,7 +28,7 @@ class Player(Bot):
 
     def handle_new_round(self, game_state, round_state, active):
         '''
-        Called when a new round starts. Called 1000 times.
+        Called when a new round starts. Called NUM_ROUNDS times.
 
         Arguments:
         game_state: the GameState object.
@@ -38,14 +40,14 @@ class Player(Bot):
         '''
         #my_bankroll = game_state.bankroll  # the total number of chips you've gained or lost from the beginning of the game to the start of this round
         #game_clock = game_state.game_clock  # the total number of seconds your bot has left to play this game
-        #round_num = game_state.round_num  # the round number from 1 to 1000
+        #round_num = game_state.round_num  # the round number from 1 to NUM_ROUNDS
         #my_cards = round_state.hands[active]  # your cards
         #big_blind = bool(active)  # True if you are the big blind
         pass
 
     def handle_round_over(self, game_state, terminal_state, active):
         '''
-        Called when a round ends. Called 1000 times.
+        Called when a round ends. Called NUM_ROUNDS times.
 
         Arguments:
         game_state: the GameState object.
@@ -84,8 +86,8 @@ class Player(Bot):
         #my_stack = round_state.stacks[active]  # the number of chips you have remaining this round
         #opp_stack = round_state.stacks[1-active]  # the number of chips your opponent has remaining this round
         #continue_cost = opp_pip - my_pip  # the number of chips needed to stay in the pot
-        #my_contribution = 400 - my_stack  # the number of chips you have contributed to the pot
-        #opp_contribution = 400 - opp_stack  # the number of chips your opponent has contributed to the pot
+        #my_contribution = STARTING_STACK - my_stack  # the number of chips you have contributed to the pot
+        #opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot
         #if RaiseAction in legal_actions:
         #    min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
         #    min_cost = min_raise - my_pip  # the cost of a minimum bet/raise
@@ -95,8 +97,7 @@ class Player(Bot):
             bounds = round_state.raise_bounds()
             amount = random.randint(bounds[0], bounds[1])
             return action(amount)
-        else:
-            return action()
+        return action()
 
 
 if __name__ == '__main__':

@@ -83,8 +83,8 @@ class Player(Bot):
         #board_cards = round_state.deck[:street]  # the board cards
         #my_pip = round_state.pips[active]  # the number of chips you have contributed to the pot this round of betting
         #opp_pip = round_state.pips[1-active]  # the number of chips your opponent has contributed to the pot this round of betting
-        #my_stack = round_state.stacks[active]  # the number of chips you have remaining this round
-        #opp_stack = round_state.stacks[1-active]  # the number of chips your opponent has remaining this round
+        #my_stack = round_state.stacks[active]  # the number of chips you have remaining
+        #opp_stack = round_state.stacks[1-active]  # the number of chips your opponent has remaining
         #continue_cost = opp_pip - my_pip  # the number of chips needed to stay in the pot
         #my_contribution = STARTING_STACK - my_stack  # the number of chips you have contributed to the pot
         #opp_contribution = STARTING_STACK - opp_stack  # the number of chips your opponent has contributed to the pot

@@ -7,6 +7,7 @@ This is the reference implementation of the engine for playing vanilla Texas hol
  - python>=3.5
  - cython (pip install cython)
  - eval7 (pip install eval7)
+ - boost for cpp_skeleton (sudo apt install libboost-all-dev)
 
 ## Linting
 Use pylint.

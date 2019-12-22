@@ -1,8 +1,8 @@
 CXXFLAGS = -Wall -std=c++11
-LDLIBS = -lboost_system -lpthread
+LDLIBS = -lboost_system -lboost_program_options -lpthread
 
 pokerbot: main.o
-	g++ $(CXXFLAGS) -o pokerbot $(LDLIBS) main.o player.o skeleton/runner.o skeleton/states.o skeleton/actions.o
+	g++ $(CXXFLAGS) -o pokerbot main.o player.o skeleton/runner.o skeleton/states.o skeleton/actions.o $(LDLIBS)
 
 main.o: main.cpp player.o skeleton/runner.o
 	g++ $(CXXFLAGS) -o main.o -c main.cpp

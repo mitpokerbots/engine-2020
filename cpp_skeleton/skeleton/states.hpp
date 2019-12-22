@@ -49,7 +49,7 @@ class TerminalState : public State
 {
     public:
         const array<int, 2> deltas;
-        State*const previous_state;
+        State* const previous_state;
 
         TerminalState(array<int, 2> deltas, State* previous_state):
             deltas(deltas),
@@ -70,7 +70,7 @@ class RoundState : public State
         const array<int, 2> stacks;
         const array< array<string, 2>, 2 > hands;
         const array<string, 5> deck;
-        State*const previous_state;
+        State* const previous_state;
 
         RoundState(int button,
                    int street,

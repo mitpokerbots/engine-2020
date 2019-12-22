@@ -31,17 +31,25 @@ void Runner::send(Action action)
     switch (action.action_type)
     {
         case FOLD_ACTION_TYPE:
+        {
             code = "F";
             break;
+        }
         case CALL_ACTION_TYPE:
+        {
             code = "C";
             break;
+        }
         case CHECK_ACTION_TYPE:
+        {
             code = "K";
             break;
+        }
         default:  // RAISE_ACTION_TYPE
+        {
             code = "R" + lexical_cast<string>(action.amount);
             break;
+        }
     }
     *(this->stream) << code << "\n";
 }
@@ -116,7 +124,11 @@ void Runner::run()
                 {
                     vector<string> cards;
                     split(cards, leftover, is_any_of(","));
-                    array<string, 5> revised_deck = (array<string, 5>) { cards[0], cards[1], cards[2], cards[3], cards[4] };
+                    array<string, 5> revised_deck = { "" };
+                    for (unsigned int i = 0; i < cards.size(); i++)
+                    {
+                        revised_deck[i] = cards[i];
+                    }
                     RoundState* maker = (RoundState*) round_state;
                     round_state = new RoundState(maker->button, maker->street, maker->pips, maker->stacks,
                                                  maker->hands, revised_deck, maker->previous_state);
@@ -171,6 +183,7 @@ void Runner::run()
                 }
                 case 'Q':
                 {
+                    delete game_state;
                     return;
                 }
                 default:

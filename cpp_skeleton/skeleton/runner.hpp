@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <array>
 #include <string>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -14,6 +15,7 @@
 
 using std::getline;
 using std::vector;
+using std::array;
 using std::string;
 using std::cout;
 using boost::lexical_cast;

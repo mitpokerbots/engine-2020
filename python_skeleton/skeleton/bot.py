@@ -5,12 +5,12 @@ This file contains the base class that you should implement for your pokerbot.
 
 class Bot():
     '''
-    Base class for a pokerbot.
+    The base class for a pokerbot.
     '''
 
     def handle_new_round(self, game_state, round_state, active):
         '''
-        Called when a new round starts. Called 1000 times.
+        Called when a new round starts. Called NUM_ROUNDS times.
 
         Arguments:
         game_state: the GameState object.
@@ -24,7 +24,7 @@ class Bot():
 
     def handle_round_over(self, game_state, terminal_state, active):
         '''
-        Called when a round ends. Called 1000 times.
+        Called when a round ends. Called NUM_ROUNDS times.
 
         Arguments:
         game_state: the GameState object.

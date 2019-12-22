@@ -1,5 +1,5 @@
 '''
-This file contains the infrastructure for interacting with the engine.
+The infrastructure for interacting with the engine.
 '''
 import argparse
 import socket
@@ -47,7 +47,7 @@ class Runner():
         '''
         Reconstructs the game tree based on the action history received from the engine.
         '''
-        game_state = GameState(0, '0.', 1)
+        game_state = GameState(0, 0., 1)
         round_state = None
         active = 0
         round_flag = True

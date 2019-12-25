@@ -24,6 +24,25 @@ PCARDS = lambda cards: '[{}]'.format(' '.join(map(str, cards)))
 PVALUE = lambda name, value: ', {} ({})'.format(name, value)
 STATUS = lambda players: ''.join([PVALUE(p.name, p.bankroll) for p in players])
 
+# Socket encoding scheme:
+#
+# T#.### the player's game clock
+# P# the player's index
+# H**,** the player's hand in common format
+# F a fold action in the round history
+# C a call action in the round history
+# K a check action in the round history
+# R### a raise action in the round history
+# B**,**,**,**,** the board cards in common format
+# O**,** the opponent's hand in common format
+# D### the player's bankroll delta from the round
+# Q game over
+#
+# Clauses are separated by spaces
+# A message ends with "\n"
+# The engine expects a response of K at the end of the round as an ack,
+# otherwise a response which encodes the player's action
+
 
 class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks', 'hands', 'deck', 'previous_state'])):
     '''

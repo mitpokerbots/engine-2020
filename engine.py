@@ -39,7 +39,7 @@ STATUS = lambda players: ''.join([PVALUE(p.name, p.bankroll) for p in players])
 # Q game over
 #
 # Clauses are separated by spaces
-# A message ends with "\n"
+# Messages end with "\n"
 # The engine expects a response of K at the end of the round as an ack,
 # otherwise a response which encodes the player's action
 
@@ -233,7 +233,7 @@ class Player():
             for output in self.bytes_log:
                 log_file.write(output)
 
-    def query(self, round_state, round_rep, game_log):
+    def query(self, round_state, player_message, game_log):
         '''
         Requests one action from the pokerbot over the socket connection.
         At the end of the round, we request a CheckAction from the pokerbot.
@@ -241,8 +241,8 @@ class Player():
         legal_actions = round_state.legal_actions() if isinstance(round_state, RoundState) else {CheckAction}
         if self.socketfile is not None and self.game_clock > 0.:
             try:
-                round_rep[0] = 'T{:.3f}'.format(self.game_clock)
-                message = ' '.join(round_rep) + '\n'
+                player_message[0] = 'T{:.3f}'.format(self.game_clock)
+                message = ' '.join(player_message) + '\n'
                 start_time = time.perf_counter()
                 self.socketfile.write(message)
                 self.socketfile.flush()
@@ -284,31 +284,31 @@ class Game():
 
     def __init__(self):
         self.log = ['6.176 MIT Pokerbots - ' + PLAYER_1_NAME + ' vs ' + PLAYER_2_NAME]
-        self.round_reps = [[], []]
+        self.player_messages = [[], []]
 
     def log_round_state(self, players, round_state):
         '''
-        Incorporates RoundState information into the game log and player reps.
+        Incorporates RoundState information into the game log and player messages.
         '''
         if round_state.street == 0 and round_state.button == 0:
             self.log.append('{} posts the blind of {}'.format(players[0].name, SMALL_BLIND))
             self.log.append('{} posts the blind of {}'.format(players[1].name, BIG_BLIND))
             self.log.append('{} dealt {}'.format(players[0].name, PCARDS(round_state.hands[0])))
             self.log.append('{} dealt {}'.format(players[1].name, PCARDS(round_state.hands[1])))
-            self.round_reps[0] = ['T0.', 'P0', CCARDS('H', round_state.hands[0])]
-            self.round_reps[1] = ['T0.', 'P1', CCARDS('H', round_state.hands[1])]
+            self.player_messages[0] = ['T0.', 'P0', CCARDS('H', round_state.hands[0])]
+            self.player_messages[1] = ['T0.', 'P1', CCARDS('H', round_state.hands[1])]
         elif round_state.street > 0 and round_state.button == 1:
             board = round_state.deck.peek(round_state.street)
             self.log.append(STREET_NAMES[round_state.street - 3] + ' ' + PCARDS(board) +
                             PVALUE(players[0].name, STARTING_STACK-round_state.stacks[0]) +
                             PVALUE(players[1].name, STARTING_STACK-round_state.stacks[1]))
             compressed_board = CCARDS('B', board)
-            self.round_reps[0].append(compressed_board)
-            self.round_reps[1].append(compressed_board)
+            self.player_messages[0].append(compressed_board)
+            self.player_messages[1].append(compressed_board)
 
     def log_action(self, name, action, bet_override):
         '''
-        Incorporates action information into the game log and player reps.
+        Incorporates action information into the game log and player messages.
         '''
         if isinstance(action, FoldAction):
             phrasing = ' folds'
@@ -323,23 +323,23 @@ class Game():
             phrasing = (' bets ' if bet_override else ' raises to ') + str(action.amount)
             code = 'R' + str(action.amount)
         self.log.append(name + phrasing)
-        self.round_reps[0].append(code)
-        self.round_reps[1].append(code)
+        self.player_messages[0].append(code)
+        self.player_messages[1].append(code)
 
     def log_terminal_state(self, players, round_state):
         '''
-        Incorporates TerminalState information into the game log and player reps.
+        Incorporates TerminalState information into the game log and player messages.
         '''
         previous_state = round_state.previous_state
         if FoldAction not in previous_state.legal_actions():
             self.log.append('{} shows {}'.format(players[0].name, PCARDS(previous_state.hands[0])))
             self.log.append('{} shows {}'.format(players[1].name, PCARDS(previous_state.hands[1])))
-            self.round_reps[0].append(CCARDS('O', previous_state.hands[1]))
-            self.round_reps[1].append(CCARDS('O', previous_state.hands[0]))
+            self.player_messages[0].append(CCARDS('O', previous_state.hands[1]))
+            self.player_messages[1].append(CCARDS('O', previous_state.hands[0]))
         self.log.append('{} awarded {}'.format(players[0].name, round_state.deltas[0]))
         self.log.append('{} awarded {}'.format(players[1].name, round_state.deltas[1]))
-        self.round_reps[0].append('D' + str(round_state.deltas[0]))
-        self.round_reps[1].append('D' + str(round_state.deltas[1]))
+        self.player_messages[0].append('D' + str(round_state.deltas[0]))
+        self.player_messages[1].append('D' + str(round_state.deltas[1]))
 
     def run_round(self, players):
         '''
@@ -355,13 +355,13 @@ class Game():
             self.log_round_state(players, round_state)
             active = round_state.button % 2
             player = players[active]
-            action = player.query(round_state, self.round_reps[active], self.log)
+            action = player.query(round_state, self.player_messages[active], self.log)
             bet_override = (round_state.pips == [0, 0])
             self.log_action(player.name, action, bet_override)
             round_state = round_state.proceed(action)
         self.log_terminal_state(players, round_state)
-        for player, round_rep, delta in zip(players, self.round_reps, round_state.deltas):
-            player.query(round_state, round_rep, self.log)
+        for player, player_message, delta in zip(players, self.player_messages, round_state.deltas):
+            player.query(round_state, player_message, self.log)
             player.bankroll += delta
 
     def run(self):
@@ -398,4 +398,4 @@ class Game():
 
 if __name__ == '__main__':
     Game().run()
-    
+

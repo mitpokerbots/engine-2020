@@ -29,6 +29,7 @@ int RoundState::legal_actions()
         return CHECK_ACTION_TYPE | RAISE_ACTION_TYPE;
     }
     // continue_cost > 0
+    // similarly, re-raising is only allowed if both players can afford it
     bool raises_forbidden = ((continue_cost == this->stacks[active]) | (this->stacks[1-active] == 0));
     if (raises_forbidden)
     {

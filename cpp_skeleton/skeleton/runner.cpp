@@ -247,4 +247,5 @@ void run_bot(Bot* pokerbot, vector<string> args)
     }
     Runner runner(pokerbot, &stream);
     runner.run();
+    stream.close();
 }

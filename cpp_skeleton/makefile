@@ -5,8 +5,8 @@ CXX = g++
 CXXFLAGS = -Wall -std=c++11
 LDLIBS = -lboost_system -lboost_program_options -lpthread
 
-pokerbot: $(SOURCES) $(HEADERS)
-	$(CXX) $(CXXFLAGS) -o pokerbot $(SOURCES) $(LDLIBS)
+cppbot: $(SOURCES) $(HEADERS)
+	$(CXX) $(CXXFLAGS) -o cppbot $(SOURCES) $(LDLIBS)
 
 clean:
-	rm pokerbot
+	rm cppbot

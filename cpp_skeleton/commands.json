@@ -1,4 +1,4 @@
 {
     "build": ["make"],
-    "run": ["./pokerbot"]
+    "run": ["./cppbot"]
 }

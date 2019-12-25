@@ -1,7 +1,6 @@
 '''
 Simple example pokerbot, written in Python.
 '''
-import random
 from skeleton.actions import FoldAction, CallAction, CheckAction, RaiseAction
 from skeleton.states import GameState, TerminalState, RoundState
 from skeleton.states import NUM_ROUNDS, STARTING_STACK, BIG_BLIND, SMALL_BLIND
@@ -92,12 +91,9 @@ class Player(Bot):
         #    min_raise, max_raise = round_state.raise_bounds()  # the smallest and largest numbers of chips for a legal bet/raise
         #    min_cost = min_raise - my_pip  # the cost of a minimum bet/raise
         #    max_cost = max_raise - my_pip  # the cost of a maximum bet/raise
-        action = random.choice(tuple(legal_actions))  # act randomly
-        if action == RaiseAction:
-            bounds = round_state.raise_bounds()
-            amount = random.randint(bounds[0], bounds[1])
-            return action(amount)
-        return action()
+        if CheckAction in legal_actions:  # check-call
+            return CheckAction()
+        return CallAction()
 
 
 if __name__ == '__main__':

@@ -123,9 +123,10 @@ def run_bot(pokerbot, args):
     try:
         sock = socket.create_connection((args.host, args.port))
     except OSError:
-        print('Error connecting to {}:{}, aborting'.format(args.host, args.port))
+        print('Could not connect to {}:{}'.format(args.host, args.port))
         return
     socketfile = sock.makefile('rw')
     runner = Runner(pokerbot, socketfile)
     runner.run()
     socketfile.close()
+    sock.close()

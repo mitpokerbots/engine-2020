@@ -39,7 +39,7 @@ STATUS = lambda players: ''.join([PVALUE(p.name, p.bankroll) for p in players])
 # Q game over
 #
 # Clauses are separated by spaces
-# Messages end with "\n"
+# Messages end with '\n'
 # The engine expects a response of K at the end of the round as an ack,
 # otherwise a response which encodes the player's action
 

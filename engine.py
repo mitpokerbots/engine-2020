@@ -243,6 +243,7 @@ class Player():
             try:
                 player_message[0] = 'T{:.3f}'.format(self.game_clock)
                 message = ' '.join(player_message) + '\n'
+                del player_message[2:]  # do not send redundant action history
                 start_time = time.perf_counter()
                 self.socketfile.write(message)
                 self.socketfile.flush()

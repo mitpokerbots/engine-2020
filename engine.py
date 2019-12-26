@@ -42,6 +42,7 @@ STATUS = lambda players: ''.join([PVALUE(p.name, p.bankroll) for p in players])
 # Messages end with '\n'
 # The engine expects a response of K at the end of the round as an ack,
 # otherwise a response which encodes the player's action
+# Action history is sent once, including the player's actions
 
 
 class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks', 'hands', 'deck', 'previous_state'])):
@@ -243,7 +244,7 @@ class Player():
             try:
                 player_message[0] = 'T{:.3f}'.format(self.game_clock)
                 message = ' '.join(player_message) + '\n'
-                del player_message[2:]  # do not send redundant action history
+                del player_message[1:]  # do not send redundant action history
                 start_time = time.perf_counter()
                 self.socketfile.write(message)
                 self.socketfile.flush()

@@ -8,6 +8,10 @@ import json
 import subprocess
 import socket
 import eval7
+import sys
+import os
+
+sys.path.append(os.getcwd())
 from config import *
 
 FoldAction = namedtuple('FoldAction', [])

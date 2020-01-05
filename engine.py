@@ -288,7 +288,14 @@ class Game():
     '''
 
     def __init__(self):
-        values, perm = self.permute_values()
+        suits = ['c', 'd', 'h', 's']
+        values = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
+        perm = [values[i] for i in self.permute_values()]
+        # create global permutation dictionary
+        global PERM
+        PERM = {eval7.Card(values[i % 13] + suits[i // 13]) :
+                eval7.Card(perm[i % 13] + suits[i // 13])
+                for i in range(52)}
         self.log = ['6.176 MIT Pokerbots - ' + PLAYER_1_NAME + ' vs ' + PLAYER_2_NAME,
                     '---------------------------',
                     ' ' + ' '.join(values) + ' ',
@@ -308,15 +315,7 @@ class Game():
             dist = (1 - tau) / 2.  # use normalized kendall-tau distance
             if random.random() > dist:
                 break
-        suits = ['c', 'd', 'h', 's']
-        values = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
-        perm = [values[i] for i in prop_perm]
-        # create global permutation dictionary
-        global PERM
-        PERM = {eval7.Card(values[i % 13] + suits[i // 13]) :
-                eval7.Card(perm[i % 13] + suits[i // 13])
-                for i in range(52)}
-        return values, perm
+        return prop_perm
 
     def log_round_state(self, players, round_state):
         '''

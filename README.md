@@ -5,6 +5,7 @@ The command to run the engine is ```python3 engine.py```. The engine is configur
 
 ## Dependencies
  - python>=3.5
+ - numpy
  - cython (pip install cython)
  - eval7 (pip install eval7)
  - Java>=8 for java_skeleton

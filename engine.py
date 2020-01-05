@@ -3,8 +3,7 @@
 DO NOT REMOVE, RENAME, OR EDIT THIS FILE
 '''
 from collections import namedtuple
-from scipy.stats import kendalltau
-import random
+import numpy as np
 import time
 import json
 import subprocess
@@ -307,14 +306,12 @@ class Game():
         '''
         Selects a value permutation for the whole game according the prior distribution.
         '''
-        orig_perm = list(range(13))
-        prop_perm = list(range(13))
-        while True:  # rejection sample
-            random.shuffle(prop_perm)
-            tau, _ = kendalltau(prop_perm, orig_perm)
-            dist = (1 - tau) / 2.  # use normalized kendall-tau distance
-            if random.random() > dist:
-                break
+        orig_perm = list(range(13))[::-1]
+        prop_perm = []
+        seed = np.random.geometric(p=0.25, size=13) - 1
+        for s in seed:
+            pop_i = len(orig_perm) - 1 - (s % len(orig_perm))
+            prop_perm.append(orig_perm.pop(pop_i))
         return prop_perm
 
     def log_round_state(self, players, round_state):

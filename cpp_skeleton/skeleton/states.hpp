@@ -7,8 +7,6 @@
 
 using std::array;
 using std::string;
-using std::max;
-using std::min;
 
 const int NUM_ROUNDS     = 1000;
 const int STARTING_STACK = 200;

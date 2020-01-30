@@ -63,15 +63,18 @@ class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks'
         '''
         Compares the players' hands and computes payoffs.
         '''
+
+        global STRAIGHTS
+
         score0 = eval7.evaluate(list(map(PERM.get, self.deck.peek(5) + self.hands[0])))
         score1 = eval7.evaluate(list(map(PERM.get, self.deck.peek(5) + self.hands[1])))
         if score0 > score1:
             delta = STARTING_STACK - self.stacks[1]
-            if eval7.handtype(score0) == 'Straight':
+            if eval7.hand_type(score0) == 'Straight':
                 STRAIGHTS[0] += 1
         elif score0 < score1:
             delta = self.stacks[0] - STARTING_STACK
-            if eval7.handtype(score1) == 'Straight':
+            if eval7.hand_type(score1) == 'Straight':
                 STRAIGHTS[1] += 1
         else:  # split the pot
             delta = (self.stacks[0] - self.stacks[1]) // 2
@@ -422,6 +425,8 @@ class Game():
         '''
         Runs one game of poker.
         '''
+
+        global STRAIGHTS
         print('   __  _____________  ___       __           __        __    ')
         print('  /  |/  /  _/_  __/ / _ \\___  / /_____ ____/ /  ___  / /____')
         print(' / /|_/ // /  / /   / ___/ _ \\/  \'_/ -_) __/ _ \\/ _ \\/ __(_-<')

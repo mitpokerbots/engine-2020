@@ -51,6 +51,8 @@ STATUS = lambda players: ''.join([PVALUE(p.name, p.bankroll) for p in players])
 # otherwise a response which encodes the player's action
 # Action history is sent once, including the player's actions
 
+STRAIGHTS = [0, 0]
+
 
 class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks', 'hands', 'deck', 'previous_state'])):
     '''
@@ -65,8 +67,12 @@ class RoundState(namedtuple('_RoundState', ['button', 'street', 'pips', 'stacks'
         score1 = eval7.evaluate(list(map(PERM.get, self.deck.peek(5) + self.hands[1])))
         if score0 > score1:
             delta = STARTING_STACK - self.stacks[1]
+            if eval7.handtype(score0) == 'Straight':
+                STRAIGHTS[0] += 1
         elif score0 < score1:
             delta = self.stacks[0] - STARTING_STACK
+            if eval7.handtype(score1) == 'Straight':
+                STRAIGHTS[1] += 1
         else:  # split the pot
             delta = (self.stacks[0] - self.stacks[1]) // 2
         return TerminalState([delta, -delta], self)
@@ -434,6 +440,9 @@ class Game():
             self.log.append('Round #' + str(round_num) + STATUS(players))
             self.run_round(players)
             players = players[::-1]
+            STRAIGHTS = STRAIGHTS[::-1]
+        self.log.append('')
+        self.log.append('Straights ' + str(STRAIGHTS[0]) + ' ' + str(STRAIGHTS[1]))
         self.log.append('')
         self.log.append('Final' + STATUS(players))
         for player in players:
